@@ -81,14 +81,17 @@ public class CommandBuilder
             var flag = options.OutputFormat switch
             {
                 OutputFormat.Text => "-oN",
-                OutputFormat.Json => "-oJ",
+                OutputFormat.Json => "-oX",
                 OutputFormat.Xml => "-oX",
                 _ => null
             };
 
             if (flag != null)
             {
-                args.Append($" {flag} {options.OutputFile}");
+                var outputPath = options.OutputFormat == OutputFormat.Json 
+                    ? Path.ChangeExtension(options.OutputFile, ".xml.tmp")
+                    : options.OutputFile;
+                args.Append($" {flag} {outputPath}");
             }
         }
     }

@@ -48,6 +48,12 @@ public static class ScanTypeExtensions
 
     public static bool RequiresRoot(this ScanType scanType)
     {
-        return scanType is ScanType.TcpSyn or ScanType.Udp;
+        return scanType is ScanType.TcpSyn 
+            or ScanType.TcpAck 
+            or ScanType.TcpFin 
+            or ScanType.TcpNull 
+            or ScanType.TcpXmas 
+            or ScanType.TcpWindow 
+            or ScanType.Udp;
     }
 }

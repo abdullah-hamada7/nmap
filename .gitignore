@@ -118,3 +118,5 @@ Thumbs.db
 
 # dotnet CLI
 .dotnet/
+
+./setup-sudo.sh

@@ -47,13 +47,75 @@ public class OutputFormatter
                 SaveAsText(result, filePath);
                 break;
             case OutputFormat.Json:
-                Console.WriteLine($"JSON output saved by nmap to: {filePath}");
+                SaveAsJson(result, filePath);
                 break;
             case OutputFormat.Xml:
                 Console.WriteLine($"XML output saved by nmap to: {filePath}");
                 break;
             default:
                 throw new ArgumentException($"Unsupported output format: {format}");
+        }
+    }
+
+    private void SaveAsJson(ScanResult result, string filePath)
+    {
+        try
+        {
+            var tempXmlPath = Path.ChangeExtension(filePath, ".xml.tmp");
+            
+            if (!File.Exists(tempXmlPath))
+            {
+                Console.WriteLine($"Warning: Could not find XML output file for JSON conversion");
+                SaveAsText(result, filePath);
+                return;
+            }
+
+            var xmlContent = File.ReadAllText(tempXmlPath);
+            
+            using var stringReader = new StringReader(xmlContent);
+            using var xmlReader = System.Xml.XmlReader.Create(stringReader, new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Ignore });
+            
+            var xmlDoc = new System.Xml.XmlDocument();
+            xmlDoc.Load(xmlReader);
+            
+            var nmaprunElement = xmlDoc.DocumentElement;
+            if (nmaprunElement != null)
+            {
+                var jsonContent = Newtonsoft.Json.JsonConvert.SerializeXmlNode(nmaprunElement, Newtonsoft.Json.Formatting.Indented, false);
+                File.WriteAllText(filePath, jsonContent);
+            }
+            else
+            {
+                throw new Exception("Could not find nmaprun root element");
+            }
+            
+            File.Delete(tempXmlPath);
+            
+            Console.WriteLine($"JSON output saved to: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Failed to convert XML to JSON: {ex.Message}");
+            Console.WriteLine("Saving XML output directly...");
+            
+            try
+            {
+                var tempXmlPath = Path.ChangeExtension(filePath, ".xml.tmp");
+                if (File.Exists(tempXmlPath))
+                {
+                    File.Copy(tempXmlPath, filePath, true);
+                    File.Delete(tempXmlPath);
+                    Console.WriteLine($"XML output saved to: {filePath}");
+                }
+                else
+                {
+                    SaveAsText(result, filePath);
+                }
+            }
+            catch
+            {
+                SaveAsText(result, filePath);
+            }
         }
     }
 
